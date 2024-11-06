@@ -25,7 +25,7 @@ with col_input:
             with col_normal:
                 with st.spinner("Processing..."):
                     st.info("Response: Answering without RAG...")
-                    response = utils.ask_gemini(prompt)
+                    response = utils.rag_with_pdf(prompt)
                     st.markdown(response)
                     st.divider()
             

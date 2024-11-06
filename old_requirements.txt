@@ -1,0 +1,12 @@
+langchain
+python-dotenv
+langchain-openai
+langchain-cohere
+langchain-google-genai
+openai
+streamlit
+python-dotenv
+bs4
+cohere
+faiss-cpu
+pypdf

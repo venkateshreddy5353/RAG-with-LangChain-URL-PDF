@@ -4,41 +4,32 @@ from langchain_cohere import CohereEmbeddings
 from langchain_openai import OpenAI
 from langchain_community.document_loaders.web_base import WebBaseLoader
 from langchain_community.document_loaders.pdf import PyPDFLoader
+from langchain_community.document_loaders import OnlinePDFLoader
 from langchain_community.vectorstores.faiss import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.huggingface import HuggingFaceInferenceAPIEmbeddings
 import os
-
 from dotenv import load_dotenv
+import ssl
+
+# Disable SSL verification globally
+ssl._create_default_https_context = ssl._create_unverified_context
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GOOGLE_AI_API_KEY")
+
+# GEMINI_API_KEY = os.getenv("GOOGLE_AI_API_KEY")
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 
 # COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 # HF_API_KEY = os.getenv("HF_API_KEY")
 
-# llm_openai = OpenAI(api_key=OPEN_AI_API_KEY, model="gpt-3.5-turbo")
-llm_gemini = ChatGoogleGenerativeAI( google_api_key= GEMINI_API_KEY, model="gemini-pro")
+llm_openai = OpenAI(api_key=OPEN_AI_API_KEY)
+# llm_gemini = ChatGoogleGenerativeAI( google_api_key= GEMINI_API_KEY, model="gemini-pro")
 embeddings_open_ai = OpenAIEmbeddings(api_key=OPEN_AI_API_KEY) # OPEN_AI
 
 # embeddings_cohere = CohereEmbeddings(api_key=COHERE_API_KEY,model="embed-multilingual-v3.0") # embed-english-v3.0
 # embeddings_hunggingface = HuggingFaceInferenceAPIEmbeddings(api_key=HF_API_KEY, model="sentence-transformers/all-MiniLM-16-v2")
-
-
-def ask_gemini(prompt):
-    """
-    Sends a prompt to the Gemini AI model and returns the response content.
-
-    Args:
-        prompt (str): The prompt to send to the Gemini AI model.
-
-    Returns:
-        str: The response content from the Gemini AI model.
-    """
-    AI_Respose = llm_gemini.invoke(prompt)
-    return AI_Respose.content
 
 
 
@@ -57,7 +48,11 @@ def rag_with_url(target_url, prompt):
         Any exceptions that may occur during the execution of the function.
 
     """
-    loader = WebBaseLoader(target_url)
+    if target_url.lower().endswith('.pdf'):
+        loader = OnlinePDFLoader(target_url)
+    else:
+        loader = WebBaseLoader(target_url)
+    
     raw_document = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(
@@ -76,9 +71,9 @@ def rag_with_url(target_url, prompt):
 
     final_prompt = prompt + " " + " ".join([doc.page_content for doc in relevant_documents])
 
-    AI_Respose = llm_gemini.invoke(final_prompt)
+    AI_Respose = llm_openai.invoke(final_prompt)
 
-    return AI_Respose.content
+    return AI_Respose
 
 
 
@@ -118,6 +113,6 @@ def rag_with_pdf(file_path, prompt):
 
     final_prompt = prompt + " " + " ".join([doc.page_content for doc in relevant_documents])
 
-    AI_Respose = llm_gemini.invoke(final_prompt)
+    AI_Respose = llm_openai.invoke(final_prompt)
 
     return AI_Respose.content, relevant_documents
